@@ -1,4 +1,4 @@
-![SimplePatch](http://raw.github.com/OmarMuscatello/SimplePatch/master/simplepatch.png)
+<img src="http://raw.github.com/OmarMuscatello/SimplePatch/master/simplepatch.png" height="70" alt="SimplePatch">
 
 Una semplice libreria per l'utilizzo del metodo PATCH in ASP.NET Web API
 
