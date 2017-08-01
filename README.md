@@ -1,171 +1,164 @@
 <img src="http://raw.github.com/OmarMuscatello/SimplePatch/master/simplepatch.png" height="70" alt="SimplePatch">
 
-Una semplice libreria per l'utilizzo del metodo PATCH in ASP.NET Web API
 
-##### Sommario
-- [Introduzione](#introduzione)
-- [Installazione](#installazione)
-- [Utilizzo](#utilizzo)
-- [Integrazione con Entity Framework](#integrazione-con-entity-framework)
-- [Configurazione](#configurazione)
+A simple library for using the PATCH method in ASP.NET Web API.
 
-## Introduzione
+**Help me!** Improve this translation with a pull request.
 
-### Il problema
-Uno dei problemi comuni nell'implementazione di un servizio RESTful in ASP.NET Web API è la modifica parziale delle entità. Il client, infatti, deve specificare il valore per tutte le proprietà dell'entità, comprese quelle proprietà il cui valore non è stato modificato. In genere, per risolvere questo problema si utilizzano queste soluzioni che portano con se le proprie problematiche:
-- [`Delta<T>`](https://msdn.microsoft.com/en-us/library/jj890572(v=vs.118).aspx) (parte di Microsoft ASP.NET WebAPI OData): non supporta gli interi in JSON (vedi [questa risposta](https://stackoverflow.com/a/14734273/7772490)). Inoltre è necessario installare il pacchetto con tutte le sue dipendenze di dimensioni non banali;
-- [JSON Patch](http://jsonpatch.com/): il client deve organizzare i dati per operazione e le dimensioni della richiesta non sono ottimizzate.
+##### Summary
+- [Introduction](#introduction)
+- [Install](#install)
+- [How to use](#how-to-use)
+- [Integration with the Entity Framework](#integration-with-entity-framework)
+- [Configuration](#configuration)
 
-##### Esempio
-Il client deve impostare la proprietà `Abilitato` dell'entità `Utente`. Quest'ultima, tuttavia, espone anche la proprietà `Nome`. Il client si trova costretto a passare nel corpo della richiesta sia il valore della proprietà `Abilitato` che il valore della proprietà `Nome`.
+## Introduction
 
-*Corpo della richiesta*
+### The problem
+Partial modification of entities is one of the common issues when implementing a RESTful service in ASP.NET Web API. The client, in fact, must specify the value for all entity properties, including those properties whose value has not been changed. Typically, to solve this problem, you use these solutions with their own problems:
+- [`Delta<T>`](https://msdn.microsoft.com/en-us/library/jj890572(v=vs.118).aspx) (part of Microsoft ASP.NET WebAPI OData): it has some problems with numbers when using JSON (see [this answer](https://stackoverflow.com/a/14734273/7772490)). You also need to install the package with all its non-trivial dependencies;
+- [JSON Patch](http://jsonpatch.com/): the client must organize the data per operation and the size of the request is not optimized.
+
+##### Demonstrative example
+The client must set the `Enabled` property of the `User` entity. The latter, however, also exposes the `Name` property. The client is forced to pass both the values of the `Enabled` and `Name` properties in the request body.
+
+*Request body*
 ```   
-{ "Abilitato": true, "Nome": "Utente1" }
+{ "Enabled": true, "Name": "User1" }
 ```
 
-In un caso reale, comunque, le proprietà di un'entità sono più di due rendendo il problema più accentuato.
+In a real case, however, the properties of an entity are more than two, making the problem more pronounced.
 ```   
-{ "Abilitato": true, "Nome": "Utente1", "Prop1": "Value1", "Prop2": "Value2", "Prop3": "Value3", ... }
+{ "Enabled": true, "Name": "User1", "Prop1": "Value1", "Prop2": "Value2", "Prop3": "Value3", ... }
 ```
 
-### La soluzione
-La soluzione ideale consiste nel consentire al client di effettuare una richiesta con le sole proprietà da modificare.
-Ritornando all'esempio indicato nella sezione *[Il problema](#il-problema)*, il corpo della richiesta per la modifica del valore della proprietà `Abilitato` sarà:
+### The solution
+The ideal solution is to allow the client to make a request with the only properties to modify.
+Returning to the example shown in the *[Problem](#the-problem)* section, the request body for changing the value of the `Enabled` property will be:
 ```   
-{ "Abilitato": true }
+{ "Enabled": true }
 ```
-Nel caso in cui l'entità avesse più proprietà il corpo della richiesta rimarrà il medesimo.
+If the entity has more property, the request body will remain the same.
 
-*SimplePatch* consente di implementare esattamente questa soluzione in ASP.NET Web API.
+*SimplePatch* allows you to implement this solution in the ASP.NET Web API.
 
-## Installazione
-Lancia il seguente comando da *Console di Gestione pacchetti*:
+## Install
+Launch the following command from *Package Manager Console*:
 ```
 Install-Package SimplePatch
 ```
 
-## Utilizzo
-### Aggiornamento di una sola entità
+## How to use
+##### Patching a single entity
     [HttpPatch]
     public IHttpActionResult PatchOne(int id, Delta<Person> person)
     {
-        //Determino l'entità da aggiornare in base al parametro id
+        // Determines the entity to be updated according to the id parameter
         var personToPatch = TestData.People.FirstOrDefault(x => x.Id == id);
         if (personToPatch == null) return BadRequest("Person not found");
 
-        /*
-         * Applico le modifiche specificate all'entità originale. Tuttavia, il parametro Id non viene mai aggiornato.
-         * Vedi Global.asax
-         */
+        // Apply the changes specified to the original entity
         person.Patch(personToPatch);
 
-        //Adesso la variabile personToPatch è aggiornata
+        // Now the personToPatch variable is updated
 
         return Ok(personToPatch);
     }
-### Aggiornamento di più entità  
+##### Patching multiple entities
     [HttpPatch]
     public IHttpActionResult PatchMultiple(DeltaCollection<Person> people)
     {
         foreach (var person in people)
         {
-            //Tento di ottenere il valore della proprietà Id
+            // Try to get the value of the Id property
             if (person.TryGetPropertyValue(nameof(Person.Id), out var id))
             {
-                //Determino l'entità da aggiornare in base all'id specificato
-                var entityToPatch = TestData.People.FirstOrDefault(x => x.Id == Convert.ToInt32(id));
-                if (entityToPatch == null) return BadRequest("Person not found (Id = " + id + ")");
+                // Determines the entity to be updated according to the specified id
+                var personToPatch = TestData.People.FirstOrDefault(x => x.Id == Convert.ToInt32(id));
+                if (personToPatch == null) return BadRequest("Person not found (Id = " + id + ")");
 
-                /*
-                 * Applico le modifiche specificate all'entità originale. Tuttavia, il parametro Id non viene mai aggiornato.
-                 * Vedi Global.asax
-                 */
-                person.Patch(entityToPatch);
+                // Apply the specified changes to the original entity       
+                person.Patch(personToPatch);
             }
             else
             {
-                //La proprietà Id non è stata specificata per la persona rappresentata dalla variabile person
+                // The Id property was not specified for the person represented by the person variable 
                 return BadRequest("Id property not found for a person");
             }
         }
 
-        return Ok(TestData.People);
+        return Ok();
     }
 
-## Integrazione con Entity Framework
-### Aggiornamento di una sola entità
+## Integration with Entity Framework
+##### Patching a single entity
 ```
 [HttpPatch]
 public async Task<IHttpActionResult> PatchOne(int id, Delta<PersonEF> person)
 {
-    //Determino l'entità da aggiornare in base al parametro id
+    // Determines the entity to be updated according to the id parameter
     var personToPatch = await db.People.FindAsync(id);
     if (personToPatch == null) return BadRequest("Person not found");
 
-    /*
-        * Applico le modifiche specificate all'entità originale. Tuttavia, il parametro Id non viene mai aggiornato.
-        * Vedi Global.asax
-        */
+    // Apply the specified changes to the original entity     
     person.Patch(personToPatch);
+
+    // Mark the entity as modified
     db.Entry(personToPatch).State = EntityState.Modified;
 
-    //Adesso la variabile personToPatch è aggiornata
+    // Now the personToPatch variable is updated
 
-    //Salvo le modifiche
+    // Save the changes
     await db.SaveChangesAsync();
 
     return Ok(personToPatch);
 }
 ```
 
-### Aggiornamento di più entità
+##### Patching multiple entities
 ```
 [HttpPatch]
 public async Task<IHttpActionResult> PatchMultiple(DeltaCollection<PersonEF> people)
 {
     foreach (var person in people)
     {
-        //Tento di ottenere il valore della proprietà Id
+        // Try to get the value of the Id property
         if (person.TryGetPropertyValue(nameof(PersonEF.Id), out var id))
         {
-            //Determino l'entità da aggiornare in base all'id specificato
+            // Determines the entity to be updated according to the id parameter
             var personToPatch = await db.People.FindAsync(Convert.ToInt32(id));
             if (personToPatch == null) return BadRequest("Person not found (Id = " + id + ")");
 
-            /*
-                * Applico le modifiche specificate all'entità originale. Tuttavia, il parametro Id non viene mai aggiornato.
-                * Vedi Global.asax
-                */
+            // Apply the specified changes to the original entity
             person.Patch(personToPatch);
 
-            //Contrassegno l'entità come modificata
+            // Mark the entity as modified
             db.Entry(personToPatch).State = EntityState.Modified;
         }
         else
         {
-            //La proprietà Id non è stata specificata per la persona rappresentata dalla variabile person
+            // The Id property was not specified for the person represented by the person variable 
             return BadRequest("Id property not found for a person");
         }
     }
 
-    //Salvo le modifiche
+    // Save the changes
     await db.SaveChangesAsync();
 
-    return Ok(await db.People.ToListAsync());
+    return Ok();
 }
 ```
 
-## Configurazione
-È possibile escludere una o più proprietà di un'entità durante l'applicazione delle modifiche all'entità originale così da preservare il valore originale della proprietà. Questo potrebbe essere utile per le proprietà utilizzate per identificare univocamente l'entità.
+## Configuration
+You can exclude one or more properties of an entity while applying the changes to the original entity to preserve the original value of the property. This might be useful for properties used to uniquely identify the entity.
 
-**Global.asax** o **Startup.cs**
+**Global.asax** or **Startup.cs**
 ```
 DeltaConfig.Init((cfg) =>
 {
-    // Escludo la proprietà Id dell'entità Person.
+    // Exclude the Id property of the Person entity.
     cfg.ExcludeProperties<Person>(x => x.Id);
 });
 ```
 
-**Nota:** Quando una proprietà viene contrassegnata come *esclusa* essa sarà ugualmente presente nell'oggetto `Delta<T>`, ma verrà ignorata in fase di applicazione delle modifiche (metodo `Patch`) all'entità originale.
+**Note:** When a property is marked as *excluded* it will still be present in the `Delta <T>` object, but it will be ignored when the changes are applied (`Patch` method) to the original entity.
