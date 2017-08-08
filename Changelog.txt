@@ -1,0 +1,6 @@
+1.1 - Aug 8, 2017
+* Added Delta.GetSpecifiedPropertyNames and Delta.GetNotSpecifiedPropertyNames methods.
+* Documentation comments translated to English.
+
+1.0 - Jul 27, 2017 
+* First public release.
