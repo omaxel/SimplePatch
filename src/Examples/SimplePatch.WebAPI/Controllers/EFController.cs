@@ -17,57 +17,53 @@ namespace SimplePatch.WebAPI.Controllers
             return await db.People.ToListAsync();
         }
 
-[HttpPatch]
-public async Task<IHttpActionResult> PatchOne(int id, Delta<PersonEF> person)
-{
-    //Determino l'entità da aggiornare in base al parametro id
-    var personToPatch = await db.People.FindAsync(id);
-    if (personToPatch == null) return BadRequest("Person not found");
+        [HttpPatch]
+        public async Task<IHttpActionResult> PatchOne(int id, Delta<PersonEF> person)
+        {
+            // Determines the entity to be updated according to the id parameter
+            var personToPatch = await db.People.FindAsync(id);
+            if (personToPatch == null) return BadRequest("Person not found");
 
-    /*
-        * Applico le modifiche specificate all'entità originale. Tuttavia, il parametro Id non viene mai aggiornato.
-        * Vedi Global.asax
-        */
-    person.Patch(personToPatch);
-    db.Entry(personToPatch).State = EntityState.Modified;
+            // Apply the specified changes to the original entity. The Id property won't be changed. See why in Global.asax.   
+            person.Patch(personToPatch);
 
-    //Adesso la variabile personToPatch è aggiornata
+            // Mark the entity as modified
+            db.Entry(personToPatch).State = EntityState.Modified;
 
-    //Salvo le modifiche
-    await db.SaveChangesAsync();
+            // Now the personToPatch variable is updated
 
-    return Ok(personToPatch);
-}
+            // Save the changes
+            await db.SaveChangesAsync();
+
+            return Ok(personToPatch);
+        }
 
         [HttpPatch]
         public async Task<IHttpActionResult> PatchMultiple(DeltaCollection<PersonEF> people)
         {
             foreach (var person in people)
             {
-                //Tento di ottenere il valore della proprietà Id
+                // Try to get the value of the Id property
                 if (person.TryGetPropertyValue(nameof(PersonEF.Id), out var id))
                 {
-                    //Determino l'entità da aggiornare in base all'id specificato
+                    // Determines the entity to be updated according to the id parameter
                     var personToPatch = await db.People.FindAsync(Convert.ToInt32(id));
                     if (personToPatch == null) return BadRequest("Person not found (Id = " + id + ")");
-
-                    /*
-                        * Applico le modifiche specificate all'entità originale. Tuttavia, il parametro Id non viene mai aggiornato.
-                        * Vedi Global.asax
-                        */
+                  
+                    // Apply the specified changes to the original entity
                     person.Patch(personToPatch);
 
-                    //Contrassegno l'entità come modificata
+                    // Mark the entity as modified
                     db.Entry(personToPatch).State = EntityState.Modified;
                 }
                 else
                 {
-                    //La proprietà Id non è stata specificata per la persona rappresentata dalla variabile person
+                    // The Id property was not specified for the person represented by the person variable 
                     return BadRequest("Id property not found for a person");
                 }
             }
 
-            //Salvo le modifiche
+            // Save the changes
             await db.SaveChangesAsync();
 
             return Ok(await db.People.ToListAsync());

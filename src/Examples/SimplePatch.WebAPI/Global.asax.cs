@@ -10,6 +10,7 @@ namespace SimplePatch.WebAPI
             GlobalConfiguration.Configure(WebApiConfig.Register);
             DeltaConfig.Init((cfg) =>
             {
+                // Id property will not be changed when calling the Patch method.
                 cfg.ExcludeProperties<Person>(x => x.Id);
             });
         }

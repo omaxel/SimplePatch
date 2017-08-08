@@ -17,17 +17,17 @@ namespace SimplePatch.WebAPI.Controllers
         [HttpPatch]
         public IHttpActionResult PatchOne(int id, Delta<Person> person)
         {
-            //Determino l'entità da aggiornare in base al parametro id
+            // Determines the entity to be updated according to the id parameter
             var personToPatch = TestData.People.FirstOrDefault(x => x.Id == id);
-            if (personToPatch == null) return BadRequest("Person not found");
 
-            /*
-             * Applico le modifiche specificate all'entità originale. Tuttavia, il parametro Id non viene mai aggiornato.
-             * Vedi Global.asax
-             */
+            var c = person.GetSpecifiedPropertyNames();
+
+            if (personToPatch == null) return BadRequest("Person not found");
+            
+            // Apply the changes specified to the original entity
             person.Patch(personToPatch);
 
-            //Adesso la variabile personToPatch è aggiornata
+            // Now the personToPatch variable is updated
 
             return Ok(personToPatch);
         }
@@ -37,22 +37,19 @@ namespace SimplePatch.WebAPI.Controllers
         {
             foreach (var person in people)
             {
-                //Tento di ottenere il valore della proprietà Id
+                // Try to get the value of the Id property
                 if (person.TryGetPropertyValue(nameof(Person.Id), out var id))
                 {
-                    //Determino l'entità da aggiornare in base all'id specificato
+                    // Determines the entity to be updated according to the specified id
                     var entityToPatch = TestData.People.FirstOrDefault(x => x.Id == Convert.ToInt32(id));
                     if (entityToPatch == null) return BadRequest("Person not found (Id = " + id + ")");
 
-                    /*
-                     * Applico le modifiche specificate all'entità originale. Tuttavia, il parametro Id non viene mai aggiornato.
-                     * Vedi Global.asax
-                     */
+                    // Apply the specified changes to the original entity       
                     person.Patch(entityToPatch);
                 }
                 else
                 {
-                    //La proprietà Id non è stata specificata per la persona rappresentata dalla variabile person
+                    // The Id property was not specified for the person represented by the person variable 
                     return BadRequest("Id property not found for a person");
                 }
             }

@@ -8,10 +8,13 @@ namespace SimplePatch
 {
     public sealed class Delta<TEntity> : IDictionary<string, object> where TEntity : class, new()
     {
+        /// <summary>
+        /// Contains the property-value pair for the <see cref="TEntity"/> entity.
+        /// </summary>
         private Dictionary<string, object> dict = new Dictionary<string, object>();
 
         /// <summary>
-        /// Il nome completo del tipo <see cref="TEntity"/>
+        /// The full name of the type <see cref="TEntity"/>.
         /// </summary>
         private string typeFullName;
 
@@ -32,18 +35,18 @@ namespace SimplePatch
         }
 
         /// <summary>
-        /// Crea una nuova entità del tipo <see cref="TEntity"/> e popola le proprietà per cui si dispone un valore.
+        /// Create a new <see cref="TEntity" /> instance and fill the properties for which you have a value.
         /// </summary>
-        /// <returns>Una nuova entità di tipo <see cref="TEntity"/></returns>
+        /// <returns>The <see cref="TEntity"/> instance</returns>
         public TEntity GetEntity()
         {
             return SetPropertiesValue(new TEntity());
         }
 
         /// <summary>
-        /// Imposta il valore delle proprietà modificate per l'entità specificata.
+        /// Sets the value of the modified properties for the specified entity.
         /// </summary>
-        /// <param name="entity">L'entità da modificare.</param>
+        /// <param name="entity">Entity to be edited.</param>
         public void Patch(TEntity entity)
         {
             if (entity == null) throw new ArgumentNullException();
@@ -51,21 +54,21 @@ namespace SimplePatch
         }
 
         /// <summary>
-        /// Indica se il nome della proprietà specificata è presente nella lista dei nomi delle proprietà modificate.
+        /// Indicates whether the specified property name is present in the list of changed property names.
         /// </summary>
-        /// <param name="propertyName">Il nome della proprietà da verificare</param>
-        /// <returns>True se il nome della proprietà è presente nella lista dei nomi delle proprietà modificate, altrimenti False</returns>
+        /// <param name="propertyName">The name of the property to be verified.</param>
+        /// <returns>True if the property name is present in the list of changed property names, otherwise False.</returns>
         public bool HasProperty(string propertyName)
         {
             return dict.ContainsKey(propertyName);
         }
 
         /// <summary>
-        /// Tenta di ottenere il valore della proprietà con nome specificato.
+        /// Try to get the property value with the specified name.
         /// </summary>
-        /// <param name="propertyName">Il nome della proprietà per cui ottenere il valore.</param>
-        /// <param name="propertyValue">Il valore della proprietà specificata.</param>
-        /// <returns>True se è stato possibile ottenere il valore della proprietà, altrimenti False.</returns>
+        /// <param name="propertyName">The name of the property to get the value.</param>
+        /// <param name="propertyValue">The value of the specified property.</param>
+        /// <returns>True if it was possible to get the property value, otherwise False.</returns>
         public bool TryGetPropertyValue(string propertyName, out object propertyValue)
         {
             if (!HasProperty(propertyName))
@@ -79,39 +82,62 @@ namespace SimplePatch
         }
 
         /// <summary>
-        /// Aggiunge un elemento al dizionario solo se la chiave specificata è un nome di proprietà di <see cref="TEntity"/>.
+        /// Adds an element to the dictionary only if the specified key is a property name of <see cref="TEntity"/>.
         /// </summary>
-        /// <param name="item">Elemento da aggiungere. Se <paramref name="item"/>.Value è null o <see cref="string.Empty"/> l'elemento non verrà aggiunto. Vedi <see cref="IsPropertyAllowed(string)".</param>
+        /// <param name="item">Item to be added. The element will not be added if <paramref name="item"/>.Value is null or it is equal to <see cref="string.Empty"/>. See <see cref="IsPropertyAllowed(string)".</param>
         public void Add(KeyValuePair<string, object> item)
         {
             if (IsPropertyAllowed(item.Key)) dict.Add(item.Key, item.Value);
         }
 
         /// <summary>
-        /// Aggiunge la chiave e il valore specificati al dizionario solo se la chiave specificata è un nome di proprietà di <see cref="TEntity"/>.
+        /// Adds the specified key and value to the dictionary only if the specified key is a property name of <see cref="TEntity"/>.
         /// </summary>
-        /// <param name="key">Chiave dell'elemento da aggiungere.</param>
-        /// <param name="value">Valore dell'elemento da aggiungere. Se null o <see cref="string.Empty"/> l'elemento non verrà aggiunto. Vedi <see cref="IsPropertyAllowed(string)"./></param>
+        /// <param name="key">Element key to add.</param>
+        /// <param name="value">Value of element to be added. The element will not be added if null or equal to <see cref="string.Empty"/>. See <see cref="IsPropertyAllowed(string)".</param>
         public void Add(string key, object value)
         {
             if (IsPropertyAllowed(key)) dict.Add(key, value);
         }
 
         /// <summary>
-        /// Indica se <see cref="TEntity"/> espone una proprietà con il nome specificato.
+        /// Returns the properties that have been specified (compared to <see cref="TEntity"/> properties) as an enumeration of property names.
         /// </summary>
-        /// <param name="propertyName">Il nome della proprietà da verificare.</param>
-        /// <returns>True se <see cref="TEntity"/> espone una proprietà con il nome specificato, altrimenti False</returns>
+        /// <returns>The property names.</returns>
+        public IEnumerable<string> GetSpecifiedPropertyNames()
+        {
+            foreach (var item in dict)
+            {
+                yield return item.Key;
+            }
+        }
+
+        /// <summary>
+        /// Returns the properties that haven't been specified (compared to <see cref="TEntity"/> properties) as an enumeration of property names.
+        /// </summary>
+        /// <returns>The property names.</returns>
+        public IEnumerable<string> GetNotSpecifiedPropertyNames()
+        {
+            return DeltaCache.entityProperties[typeFullName].Select(x => x.Name).Where(x => !dict.ContainsKey(x));
+        }
+
+        #region Private methods
+
+        /// <summary>
+        /// Indicates whether <see cref="TEntity" /> exposes a property with the specified name.
+        /// </summary>
+        /// <param name="propertyName">The name of the property to be verified.</param>
+        /// <returns>True if <see cref="TEntity" /> exposes a property with the specified name, otherwise False.</returns>
         private bool IsPropertyAllowed(string propertyName)
         {
             return !string.IsNullOrEmpty(propertyName) && DeltaCache.entityProperties[typeFullName].Any(x => x.Name == propertyName);
         }
 
         /// <summary>
-        /// Imposta il valore per ogni proprietà di <see cref="TEntity"/> per cui esiste un riferimento in <see cref="dict"/>.
+        /// Set the value for each property of <see cref="TEntity" /> for which there is a reference in <see cref="dict" />.
         /// </summary>
-        /// <param name="entity">L'istanza di <see cref="TEntity"/> per cui impostare le proprietà.</param>
-        /// <returns>L'entità modificata</returns>
+        /// <param name="entity">The instance of <see cref="TEntity" /> to set properties.</param>
+        /// <returns>The modified entity.</returns>
         private TEntity SetPropertiesValue(TEntity entity)
         {
             //Se la cache non contiene la lista delle proprietà per il tipo specificato, aggiungo le proprietà
@@ -135,11 +161,11 @@ namespace SimplePatch
         }
 
         /// <summary>
-        /// Indica se, per la proprietà con nome specificato appartenente all'entità specificata, deve essere disabilitata la modifica.
+        /// Specifies whether the change must be disabled for the property with specified name belonging to the specified entity.
         /// </summary>
-        /// <param name="typeFullName">Il nome intero dell'entità che espone la proprietà.</param>
-        /// <param name="propertyName">Il nome della proprietà.</param>
-        /// <returns>True se la proprietà è esclusa dalle modifiche, altrimenti False.</returns>
+        /// <param name="typeFullName">The entity's full name that exposes the property.</param>
+        /// <param name="propertyName">The name of the property.</param>
+        /// <returns>True if property is excluded from changes, otherwise False.</returns>
         private bool IsExcludedProperty(string typeFullName, string propertyName)
         {
             if (!DeltaCache.excludedProperties.ContainsKey(typeFullName)) return false;
@@ -148,16 +174,18 @@ namespace SimplePatch
         }
 
         /// <summary>
-        /// Restituisce il tipo specificato dal parametro o il tipo sottostante se <paramref name="type"/> è <see cref="Nullable"/>.
+        /// Returns the type specified by the parameter or type below if <paramref name="type" /> is <see cref="Nullable" />.
         /// </summary>
-        /// <param name="type">Il tipo da verificare.</param>
-        /// <returns>Il tipo specificato dal parametro o il tipo sottostante se <paramref name="type"/> è <see cref="Nullable"/>.</returns>
+        /// <param name="type">The type to be verified.</param>
+        /// <returns>The type specified by the parameter or type below if <paramref name="type" /> is <see cref="Nullable" />.</returns>
         private Type GetTrueType(Type type)
         {
             return Nullable.GetUnderlyingType(type) ?? type;
         }
 
-        #region Implementazione dell'interfaccia IDictionary
+        #endregion
+
+        #region Implementing the IDictionary Interface
         public ICollection<string> Keys => dict.Keys;
         public ICollection<object> Values => dict.Values;
         public int Count => dict.Count;
