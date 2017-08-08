@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set di attributi. Modificare i valori di questi attributi per modificare le informazioni
 // associate a un assembly.
 [assembly: AssemblyTitle("SimplePatch")]
-[assembly: AssemblyDescription("Una semplice libreria per l'utilizzo del metodo PATCH in ASP.NET Web API.")]
+[assembly: AssemblyDescription("A simple library for using the PATCH method in ASP.NET Web API.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Omar Muscatello")]
 [assembly: AssemblyProduct("SimplePatch")]
