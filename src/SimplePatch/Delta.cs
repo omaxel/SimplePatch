@@ -31,7 +31,7 @@ namespace SimplePatch
         {
             typeFullName = typeof(TEntity).FullName;
 
-            DeltaCache.entityProperties.TryAdd(typeFullName, typeof(TEntity).GetProperties(BindingFlags.Instance | BindingFlags.Public));
+            DeltaCache.entityProperties.TryAdd(typeFullName, typeof(TEntity).GetTypeInfo().DeclaredProperties.Where(x => x.GetMethod.IsPublic && x.SetMethod.IsPublic && x.CanRead && x.CanWrite));
         }
 
         /// <summary>

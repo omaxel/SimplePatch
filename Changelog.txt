@@ -1,3 +1,8 @@
+1.2 - Aug 26, 2017
+* Added support for ASP.NET Core.
+* Moved examples folder.
+* Added example for ASP.NET Core Web API.
+
 1.1 - Aug 8, 2017
 * Added Delta.GetSpecifiedPropertyNames and Delta.GetNotSpecifiedPropertyNames methods.
 * Documentation comments translated to English.
