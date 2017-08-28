@@ -1,7 +1,7 @@
 <img src="http://raw.github.com/OmarMuscatello/SimplePatch/master/simplepatch.png" height="70" alt="SimplePatch">
 
 
-A simple library for using the PATCH method in ASP.NET Web API.
+A simple library for partial entity changes in ASP.NET and ASP.NET Core.
 
 **Help me!** Improve this translation with a pull request.
 
@@ -49,6 +49,9 @@ Install-Package SimplePatch
 ```
 
 ## How to use
+
+See [*examples* folder](https://github.com/OmarMuscatello/SimplePatch/tree/master/examples) to learn of to use this library with ASP.NET and ASP.NET Core.
+
 ##### Patching a single entity
     [HttpPatch]
     public IHttpActionResult PatchOne(int id, Delta<Person> person)
