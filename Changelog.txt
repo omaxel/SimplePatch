@@ -1,3 +1,8 @@
+1.2.1 - Sep 14, 2017
+* Added support for Guid.
+* Added DateTime and Guid fileds in example projects.
+* Added migrations in example projects.
+
 1.2 - Aug 26, 2017
 * Added support for ASP.NET Core.
 * Moved examples folder.
