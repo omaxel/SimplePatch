@@ -140,7 +140,7 @@ namespace SimplePatch
         /// <returns>The modified entity.</returns>
         private TEntity SetPropertiesValue(TEntity entity)
         {
-            //Se la cache non contiene la lista delle proprietà per il tipo specificato, aggiungo le proprietà
+            //If the cache contains the property list for the specified type, set the properties value
             if (DeltaCache.entityProperties.TryGetValue(typeFullName, out var properties))
             {
                 foreach (var prop in properties)
@@ -148,9 +148,20 @@ namespace SimplePatch
                     if (ContainsKey(prop.Name) && !IsExcludedProperty(typeFullName, prop.Name))
                     {
                         var propertyType = GetTrueType(prop.PropertyType);
-                        var newPropertyvalue = this[prop.Name];
+                        var newPropertyValue = this[prop.Name];
 
-                        prop.SetValue(entity, Convert.ChangeType(newPropertyvalue, propertyType), null);
+                        var newPropertyValueType = newPropertyValue.GetType();
+
+                        //Guid from string
+                        if (propertyType == typeof(Guid) && newPropertyValueType == typeof(string))
+                        {
+                            newPropertyValue = new Guid((string)newPropertyValue);
+                            prop.SetValue(entity, newPropertyValue, null);
+                        }
+                        else
+                        {
+                            prop.SetValue(entity, Convert.ChangeType(newPropertyValue, propertyType), null);
+                        }
                     }
                 }
 

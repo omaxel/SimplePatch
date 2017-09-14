@@ -52,6 +52,14 @@
     <Compile Include="Migrations\201708250935300_Init.Designer.cs">
       <DependentUpon>201708250935300_Init.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201709141340179_BirthDate.cs" />
+    <Compile Include="Migrations\201709141340179_BirthDate.Designer.cs">
+      <DependentUpon>201709141340179_BirthDate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201709141340313_GlobalId.cs" />
+    <Compile Include="Migrations\201709141340313_GlobalId.Designer.cs">
+      <DependentUpon>201709141340313_GlobalId.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -63,6 +71,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201708250935300_Init.resx">
       <DependentUpon>201708250935300_Init.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201709141340179_BirthDate.resx">
+      <DependentUpon>201709141340179_BirthDate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201709141340313_GlobalId.resx">
+      <DependentUpon>201709141340313_GlobalId.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

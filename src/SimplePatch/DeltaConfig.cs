@@ -14,7 +14,13 @@ namespace SimplePatch
 
         public sealed class Config
         {
-            public void ExcludeProperties<T>(params Expression<Func<T, object>>[] properties)
+            /// <summary>
+            /// Sets the properties to exclude when calling <see cref="Delta{TEntity}.Patch(TEntity)"/>.
+            /// </summary>
+            /// <typeparam name="T">Class in which the property is contained.</typeparam>
+            /// <param name="properties">Properties to exclude when calling <see cref="Delta{TEntity}.Patch(TEntity)"/></param>
+            /// <returns></returns>
+            public Config ExcludeProperties<T>(params Expression<Func<T, object>>[] properties)
             {
                 var type = typeof(T);
 
@@ -28,6 +34,8 @@ namespace SimplePatch
                 string typeFullname = typeof(T).FullName;
 
                 DeltaCache.excludedProperties.TryAdd(typeFullname, propList.ToArray());
+
+                return this;
             }
 
             private static MemberExpression GetMemberExpression<T>(Expression<Func<T, object>> exp)
