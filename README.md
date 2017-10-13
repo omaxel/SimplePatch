@@ -179,3 +179,22 @@ DeltaConfig.Init((cfg) =>
     cfg.IgnoreLetterCase();
 });
 ```
+
+#### Ignore null value for specified properties
+You can ignore null value for specified properties of an entity.
+
+This is particularly useful in two cases:
+
+- when your property is a value type (like `int` and `DateTime`) and your client still send a null value for that property. Ignoring null value will avoid exception.
+- when your property is a reference type (which allows null) but you don't want that `null` overwrites your previous stored data.
+
+**Global.asax** or **Startup.cs**
+```
+DeltaConfig.Init(cfg =>
+{
+    cfg.IgnoreNullValue<MyClass>(x => x.Date);
+
+    // Multiple properties
+    // cfg.IgnoreNullValue<MyClass>(x => x.Date1, x => x.Date2);
+});
+```

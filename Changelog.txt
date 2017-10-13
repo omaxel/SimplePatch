@@ -1,3 +1,6 @@
+1.2.3 - Oct 13, 2017
+* Added ability to ignore null value for specified properties.
+
 1.2.2 - Oct 12, 2017
 * Added ability to ignore lettere case for properties names.
 

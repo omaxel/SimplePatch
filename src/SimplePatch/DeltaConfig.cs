@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Linq;
 
 namespace SimplePatch
 {
@@ -33,9 +34,30 @@ namespace SimplePatch
                     propList.Add(propertyInfo.Name);
                 }
 
-                string typeFullname = typeof(T).FullName;
+                DeltaCache.excludedProperties.TryAdd(type.FullName, propList.ToArray());
 
-                DeltaCache.excludedProperties.TryAdd(typeFullname, propList.ToArray());
+                return this;
+            }
+
+            /// <summary>
+            /// Specifies properties for whose null value will be ignored.
+            /// </summary>
+            /// <typeparam name="T">Class in which the property is contained.</typeparam>
+            /// <param name="properties">Properties for whose null value will be ignored.</param>
+            /// <returns></returns>
+            public Config IgnoreNullValue<T>(params Expression<Func<T, object>>[] properties)
+            {
+                var type = typeof(T);
+
+                var propList = TypeHelper.GetEntityProperties<T>().ToList();
+                foreach (var prop in properties)
+                {
+                    var propertyInfo = GetMemberExpression(prop).Member as PropertyInfo;
+
+                    propList.First(x => x.Name == propertyInfo.Name).IgnoreNullValue = true;
+                }
+
+                DeltaCache.entityProperties.TryAdd(type.FullName, propList);
 
                 return this;
             }

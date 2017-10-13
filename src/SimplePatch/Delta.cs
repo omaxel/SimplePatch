@@ -42,7 +42,7 @@ namespace SimplePatch
         {
             typeFullName = typeof(TEntity).FullName;
 
-            DeltaCache.entityProperties.TryAdd(typeFullName, typeof(TEntity).GetTypeInfo().DeclaredProperties.Where(x => x.GetMethod.IsPublic && x.SetMethod.IsPublic && x.CanRead && x.CanWrite));
+            DeltaCache.entityProperties.TryAdd(typeFullName, TypeHelper.GetEntityProperties<TEntity>());
         }
 
         /// <summary>
@@ -187,10 +187,29 @@ namespace SimplePatch
             {
                 foreach (var prop in properties)
                 {
-                    if (ContainsKey(prop.Name) && !IsExcludedProperty(typeFullName, prop.Name))
+                    var propertyInfo = prop.PropertyInfo;
+                    if (ContainsKey(propertyInfo.Name) && !IsExcludedProperty(typeFullName, propertyInfo.Name))
                     {
-                        var propertyType = GetTrueType(prop.PropertyType);
-                        var newPropertyValue = this[prop.Name];
+                        var propertyType = TypeHelper.GetTrueType(propertyInfo.PropertyType);
+                        var newPropertyValue = this[propertyInfo.Name];
+
+
+                        //Check for null value before getting type of new value
+                        if (newPropertyValue == null)
+                        {
+                            if (prop.IgnoreNullValue) continue;
+
+                            //Check if destination property allows null value
+                            if (TypeHelper.IsNullable(propertyType))
+                            {
+                                propertyInfo.SetValue(entity, null, null);
+                                continue;
+                            }
+                            else
+                            {
+                                throw new Exception($"Null value not allowed for '{propertyInfo.Name}' property  of '{typeFullName}'");
+                            }
+                        }
 
                         var newPropertyValueType = newPropertyValue.GetType();
 
@@ -198,11 +217,11 @@ namespace SimplePatch
                         if (propertyType == typeof(Guid) && newPropertyValueType == typeof(string))
                         {
                             newPropertyValue = new Guid((string)newPropertyValue);
-                            prop.SetValue(entity, newPropertyValue, null);
+                            propertyInfo.SetValue(entity, newPropertyValue, null);
                         }
                         else
                         {
-                            prop.SetValue(entity, Convert.ChangeType(newPropertyValue, propertyType), null);
+                            propertyInfo.SetValue(entity, Convert.ChangeType(newPropertyValue, propertyType), null);
                         }
                     }
                 }
@@ -224,16 +243,6 @@ namespace SimplePatch
             if (!DeltaCache.excludedProperties.ContainsKey(typeFullName)) return false;
             if (DeltaCache.excludedProperties[typeFullName].Contains(propertyName)) return true;
             return false;
-        }
-
-        /// <summary>
-        /// Returns the type specified by the parameter or type below if <paramref name="type" /> is <see cref="Nullable" />.
-        /// </summary>
-        /// <param name="type">The type to be verified.</param>
-        /// <returns>The type specified by the parameter or type below if <paramref name="type" /> is <see cref="Nullable" />.</returns>
-        private Type GetTrueType(Type type)
-        {
-            return Nullable.GetUnderlyingType(type) ?? type;
         }
 
         #endregion
