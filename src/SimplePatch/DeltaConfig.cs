@@ -7,6 +7,8 @@ namespace SimplePatch
 {
     public class DeltaConfig
     {
+        internal static bool IgnoreLetterCase = false;
+
         public static void Init(Action<Config> config)
         {
             config(new Config());
@@ -35,6 +37,17 @@ namespace SimplePatch
 
                 DeltaCache.excludedProperties.TryAdd(typeFullname, propList.ToArray());
 
+                return this;
+            }
+
+            /// <summary>
+            /// If enabled, the properties names comparing function will ignore letter case.
+            /// </summary>
+            /// <param name="enabled">Whetever to ignore letter case for properties.</param>
+            /// <returns></returns>
+            public Config IgnoreLetterCase(bool enabled = true)
+            {
+                DeltaConfig.IgnoreLetterCase = enabled;
                 return this;
             }
 

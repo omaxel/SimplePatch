@@ -23,7 +23,18 @@ namespace SimplePatch
             get => dict[key];
             set
             {
-                if (IsPropertyAllowed(key)) dict[key] = value;
+                if (DeltaConfig.IgnoreLetterCase)
+                {
+                    //Get the correct case property name
+                    var propertyName = GetCorrectCasePropertyName(key);
+
+                    //Set the value if the property name is found in the entity (ignoring letter case)
+                    if (propertyName != null) dict[propertyName] = value;
+                }
+                else
+                {
+                    if (IsPropertyAllowed(key)) dict[key] = value;
+                }
             }
         }
 
@@ -87,7 +98,7 @@ namespace SimplePatch
         /// <param name="item">Item to be added. The element will not be added if <paramref name="item"/>.Value is null or it is equal to <see cref="string.Empty"/>. See <see cref="IsPropertyAllowed(string)".</param>
         public void Add(KeyValuePair<string, object> item)
         {
-            if (IsPropertyAllowed(item.Key)) dict.Add(item.Key, item.Value);
+            Add(item.Key, item.Value);
         }
 
         /// <summary>
@@ -97,7 +108,18 @@ namespace SimplePatch
         /// <param name="value">Value of element to be added. The element will not be added if null or equal to <see cref="string.Empty"/>. See <see cref="IsPropertyAllowed(string)".</param>
         public void Add(string key, object value)
         {
-            if (IsPropertyAllowed(key)) dict.Add(key, value);
+            if (DeltaConfig.IgnoreLetterCase)
+            {
+                //Get the correct case property name
+                var propertyName = GetCorrectCasePropertyName(key);
+
+                //Set the value if the property name is found in the entity (ignoring letter case)
+                if (propertyName != null) dict[propertyName] = value;
+            }
+            else
+            {
+                if (IsPropertyAllowed(key)) dict.Add(key, value);
+            }
         }
 
         /// <summary>
@@ -131,6 +153,26 @@ namespace SimplePatch
         private bool IsPropertyAllowed(string propertyName)
         {
             return !string.IsNullOrEmpty(propertyName) && DeltaCache.entityProperties[typeFullName].Any(x => x.Name == propertyName);
+        }
+
+        /// <summary>
+        /// Return the property name with correct case starting from an incorrect case name.
+        /// </summary>
+        /// <param name="propertyName">The property name </param>
+        /// <returns>The correct case property name. If no property found, null.</returns>
+        private string GetCorrectCasePropertyName(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName)) return null;
+
+            var properties = DeltaCache.entityProperties[typeFullName];
+
+            var propertyNameLowerCase = propertyName.ToLower();
+            foreach (var property in properties)
+            {
+                if (property.Name.ToLower() == propertyNameLowerCase) return property.Name;
+            }
+
+            return null;
         }
 
         /// <summary>

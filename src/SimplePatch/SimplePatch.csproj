@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>net451;netstandard1.4</TargetFrameworks>
-    <Version>1.2.1</Version>
+    <Version>1.2.2</Version>
     <Authors>Omar Muscatello</Authors>
     <Company>Omar Muscatello</Company>
     <Description>A simple library for partial entity changes in ASP.NET and ASP.NET Core.</Description>
     <Copyright>Copyright (c) Omar Muscatello 2017</Copyright>
     <PackageLicenseUrl>https://github.com/OmarMuscatello/SimplePatch/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>Added support for Guid.</PackageReleaseNotes>
+    <PackageReleaseNotes>Added ability to ignore lettere case for properties names.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/OmarMuscatello/SimplePatch</PackageProjectUrl>
     <RepositoryUrl>https://github.com/OmarMuscatello/SimplePatch</RepositoryUrl>
     <PackageIconUrl>http://raw.github.com/OmarMuscatello/SimplePatch/master/simplepatch-icon.png</PackageIconUrl>

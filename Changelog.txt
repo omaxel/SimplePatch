@@ -1,3 +1,6 @@
+1.2.2 - Oct 12, 2017
+* Added ability to ignore lettere case for properties names.
+
 1.2.1 - Sep 14, 2017
 * Added support for Guid.
 * Added DateTime and Guid fileds in example projects.

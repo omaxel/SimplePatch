@@ -153,6 +153,8 @@ public async Task<IHttpActionResult> PatchMultiple(DeltaCollection<PersonEF> peo
 ```
 
 ## Configuration
+
+#### Exclude properties
 You can exclude one or more properties of an entity while applying the changes to the original entity to preserve the original value of the property. This might be useful for properties used to uniquely identify the entity.
 
 **Global.asax** or **Startup.cs**
@@ -165,3 +167,15 @@ DeltaConfig.Init((cfg) =>
 ```
 
 **Note:** When a property is marked as *excluded* it will still be present in the `Delta <T>` object, but it will be ignored when the changes are applied (`Patch` method) to the original entity.
+
+#### Ignore letter case for property names
+You can ignore letter case for property names. This is useful when you have different name convention between client code and server code.
+For example, the property `name` sent by the client wouldn't be detected as part of an entity which has a property named `Name` (note the first letter is **upper case**).
+
+**Global.asax** or **Startup.cs**
+```
+DeltaConfig.Init((cfg) =>
+{
+    cfg.IgnoreLetterCase();
+});
+```
