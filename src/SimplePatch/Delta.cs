@@ -190,7 +190,7 @@ namespace SimplePatch
                     var propertyInfo = prop.PropertyInfo;
                     if (ContainsKey(propertyInfo.Name) && !IsExcludedProperty(typeFullName, propertyInfo.Name))
                     {
-                        var propertyType = TypeHelper.GetTrueType(propertyInfo.PropertyType);
+                        var truePropertyType = TypeHelper.GetTrueType(propertyInfo.PropertyType);
                         var newPropertyValue = this[propertyInfo.Name];
 
 
@@ -200,7 +200,7 @@ namespace SimplePatch
                             if (prop.IgnoreNullValue) continue;
 
                             //Check if destination property allows null value
-                            if (TypeHelper.IsNullable(propertyType))
+                            if (TypeHelper.IsNullable(propertyInfo.PropertyType))
                             {
                                 propertyInfo.SetValue(entity, null, null);
                                 continue;
@@ -214,14 +214,14 @@ namespace SimplePatch
                         var newPropertyValueType = newPropertyValue.GetType();
 
                         //Guid from string
-                        if (propertyType == typeof(Guid) && newPropertyValueType == typeof(string))
+                        if (truePropertyType == typeof(Guid) && newPropertyValueType == typeof(string))
                         {
                             newPropertyValue = new Guid((string)newPropertyValue);
                             propertyInfo.SetValue(entity, newPropertyValue, null);
                         }
                         else
                         {
-                            propertyInfo.SetValue(entity, Convert.ChangeType(newPropertyValue, propertyType), null);
+                            propertyInfo.SetValue(entity, Convert.ChangeType(newPropertyValue, truePropertyType), null);
                         }
                     }
                 }

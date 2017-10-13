@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>net451;netstandard1.4</TargetFrameworks>
-    <Version>1.2.3</Version>
+    <Version>1.2.4</Version>
     <Authors>Omar Muscatello</Authors>
     <Company>Omar Muscatello</Company>
     <Description>A simple library for partial entity changes in ASP.NET and ASP.NET Core.</Description>
     <Copyright>Copyright (c) Omar Muscatello 2017</Copyright>
     <PackageLicenseUrl>https://github.com/OmarMuscatello/SimplePatch/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>Added ability to ignore null value for specified properties</PackageReleaseNotes>
+    <PackageReleaseNotes>Fix exception when null assigned to a nullable value type.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/OmarMuscatello/SimplePatch</PackageProjectUrl>
     <RepositoryUrl>https://github.com/OmarMuscatello/SimplePatch</RepositoryUrl>
     <PackageIconUrl>http://raw.github.com/OmarMuscatello/SimplePatch/master/simplepatch-icon.png</PackageIconUrl>
@@ -16,8 +16,8 @@
     <PackageTags>web-api patch entity-framework update asp-net asp-net-core</PackageTags>
     <ApplicationIcon></ApplicationIcon>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.2.3.0</AssemblyVersion>
-    <FileVersion>1.2.3.0</FileVersion>
+    <AssemblyVersion>1.2.4.0</AssemblyVersion>
+    <FileVersion>1.2.4.0</FileVersion>
   </PropertyGroup>
 
 </Project>
