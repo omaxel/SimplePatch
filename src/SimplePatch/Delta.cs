@@ -1,8 +1,10 @@
-﻿using System;
+﻿using SimplePatch.Helpers;
+using SimplePatch.Mapping;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Linq.Expressions;
 
 namespace SimplePatch
 {
@@ -13,10 +15,7 @@ namespace SimplePatch
         /// </summary>
         private Dictionary<string, object> dict = new Dictionary<string, object>();
 
-        /// <summary>
-        /// The full name of the type <see cref="TEntity"/>.
-        /// </summary>
-        private string typeFullName;
+        private List<DeltaPropInfo> entityProperties;
 
         public object this[string key]
         {
@@ -40,9 +39,9 @@ namespace SimplePatch
 
         public Delta() : base()
         {
-            typeFullName = typeof(TEntity).FullName;
+            entityProperties = DeltaCache.GetEntityProperties<TEntity>();
 
-            DeltaCache.entityProperties.TryAdd(typeFullName, TypeHelper.GetEntityProperties<TEntity>());
+            if (entityProperties == null) throw new Exception($"Entity {typeof(TEntity).Name} ({typeof(TEntity).FullName}) must be declared in DeltaConfig.Init(cfg => cfg.AddEntity<T>()) method.");
         }
 
         /// <summary>
@@ -123,6 +122,17 @@ namespace SimplePatch
         }
 
         /// <summary>
+        /// Adds the specified key and value to the dictionary only if the specified key is a property name of <see cref="TEntity"/>.
+        /// </summary>
+        /// <param name="property">Element key to add.</param>
+        /// <param name="value">Value of element to be added. The element will not be added if null or equal to <see cref="string.Empty"/>. See <see cref="IsPropertyAllowed(string)".</param>
+        public void Add<TProp>(Expression<Func<TEntity, TProp>> property, object value)
+        {
+            var propertyName = ExpressionHelper.GetPropertyName(property);
+            Add(propertyName, value);
+        }
+
+        /// <summary>
         /// Returns the properties that have been specified (compared to <see cref="TEntity"/> properties) as an enumeration of property names.
         /// </summary>
         /// <returns>The property names.</returns>
@@ -140,7 +150,7 @@ namespace SimplePatch
         /// <returns>The property names.</returns>
         public IEnumerable<string> GetNotSpecifiedPropertyNames()
         {
-            return DeltaCache.entityProperties[typeFullName].Select(x => x.Name).Where(x => !dict.ContainsKey(x));
+            return entityProperties.Select(x => x.Name).Where(x => !dict.ContainsKey(x));
         }
 
         #region Private methods
@@ -152,7 +162,7 @@ namespace SimplePatch
         /// <returns>True if <see cref="TEntity" /> exposes a property with the specified name, otherwise False.</returns>
         private bool IsPropertyAllowed(string propertyName)
         {
-            return !string.IsNullOrEmpty(propertyName) && DeltaCache.entityProperties[typeFullName].Any(x => x.Name == propertyName);
+            return !string.IsNullOrEmpty(propertyName) && entityProperties.Any(x => x.Name == propertyName);
         }
 
         /// <summary>
@@ -164,12 +174,10 @@ namespace SimplePatch
         {
             if (string.IsNullOrEmpty(propertyName)) return null;
 
-            var properties = DeltaCache.entityProperties[typeFullName];
-
-            var propertyNameLowerCase = propertyName.ToLower();
-            foreach (var property in properties)
+            var propertyNameUpperCase = propertyName.ToUpper();
+            foreach (var property in entityProperties)
             {
-                if (property.Name.ToLower() == propertyNameLowerCase) return property.Name;
+                if (string.Equals(property.Name, propertyNameUpperCase, StringComparison.OrdinalIgnoreCase)) return property.Name;
             }
 
             return null;
@@ -182,67 +190,135 @@ namespace SimplePatch
         /// <returns>The modified entity.</returns>
         private TEntity SetPropertiesValue(TEntity entity)
         {
-            //If the cache contains the property list for the specified type, set the properties value
-            if (DeltaCache.entityProperties.TryGetValue(typeFullName, out var properties))
+            foreach (var prop in entityProperties)
             {
-                foreach (var prop in properties)
+                var propertyInfo = prop.PropertyInfo;
+                if (ContainsKey(propertyInfo.Name) && !prop.Excluded)
                 {
-                    var propertyInfo = prop.PropertyInfo;
-                    if (ContainsKey(propertyInfo.Name) && !IsExcludedProperty(typeFullName, propertyInfo.Name))
+                    var truePropertyType = TypeHelper.GetTrueType(propertyInfo.PropertyType);
+                    var newPropertyValue = this[propertyInfo.Name];
+
+                    //Check for null value before getting type of new value
+                    if (newPropertyValue == null)
                     {
-                        var truePropertyType = TypeHelper.GetTrueType(propertyInfo.PropertyType);
-                        var newPropertyValue = this[propertyInfo.Name];
+                        if (prop.IgnoreNullValue) continue;
 
-
-                        //Check for null value before getting type of new value
-                        if (newPropertyValue == null)
+                        //Check if destination property allows null value
+                        if (TypeHelper.IsNullable(propertyInfo.PropertyType))
                         {
-                            if (prop.IgnoreNullValue) continue;
+                            var valueFromMappingsForNull = GetValueFromAllMappings(typeof(TEntity), prop, newPropertyValue);
 
-                            //Check if destination property allows null value
-                            if (TypeHelper.IsNullable(propertyInfo.PropertyType))
+                            if (!valueFromMappingsForNull.Skip)
                             {
-                                propertyInfo.SetValue(entity, null, null);
-                                continue;
+                                propertyInfo.SetValue(entity, valueFromMappingsForNull.Value);
                             }
                             else
                             {
-                                throw new Exception($"Null value not allowed for '{propertyInfo.Name}' property  of '{typeFullName}'");
+                                propertyInfo.SetValue(entity, null);
                             }
-                        }
-
-                        var newPropertyValueType = newPropertyValue.GetType();
-
-                        //Guid from string
-                        if (truePropertyType == typeof(Guid) && newPropertyValueType == typeof(string))
-                        {
-                            newPropertyValue = new Guid((string)newPropertyValue);
-                            propertyInfo.SetValue(entity, newPropertyValue, null);
+                            continue;
                         }
                         else
                         {
-                            propertyInfo.SetValue(entity, Convert.ChangeType(newPropertyValue, truePropertyType), null);
+                            throw new Exception($"Null value not allowed for '{propertyInfo.Name}' property  of '{typeof(TEntity).FullName}'");
+                        }
+                    }
+
+                    var valueFromMappings = GetValueFromAllMappings(typeof(TEntity), prop, newPropertyValue);
+
+                    if (!valueFromMappings.Skip)
+                    {
+                        propertyInfo.SetValue(entity, valueFromMappings.Value);
+                    }
+                    // If no mapping function assigned a value to the property, use the default mapping
+                    else
+                    {
+                        var newPropertyValueType = newPropertyValue.GetType();
+
+                        // Guid from string
+                        if (truePropertyType == typeof(Guid) && newPropertyValueType == typeof(string))
+                        {
+                            newPropertyValue = new Guid((string)newPropertyValue);
+                            propertyInfo.SetValue(entity, newPropertyValue);
+                        }
+                        else
+                        {
+                            propertyInfo.SetValue(entity, Convert.ChangeType(newPropertyValue, truePropertyType));
                         }
                     }
                 }
-
-                return entity;
             }
 
-            throw new Exception("Entity properties not added to cache. Problems with Delta<T> constructor?");
+            return entity;
         }
 
         /// <summary>
-        /// Specifies whether the change must be disabled for the property with specified name belonging to the specified entity.
+        /// Obtain the <see cref="MapResult{T}"/> from <see cref="GetValueFromPropertyMappings(Type, Type, string, object)"/> or <see cref="GetValueFromGlobalMappings(Type, object)"/>.
+        /// if <see cref="GetValueFromPropertyMappings(Type, Type, string, object)"/> returns a <see cref="MapResult{T}"/> with <see cref="MapResult{T}.Skip"/> = false, then it will be return.
+        /// Otherwise the result of <see cref="GetValueFromGlobalMappings(Type, object)"/> will be returned.
         /// </summary>
-        /// <param name="typeFullName">The entity's full name that exposes the property.</param>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <returns>True if property is excluded from changes, otherwise False.</returns>
-        private bool IsExcludedProperty(string typeFullName, string propertyName)
+        /// <param name="entityType">Type of the entity</param>
+        /// <param name="deltaPropInfo">Informations about the property</param>
+        /// <param name="newPropertyValue">New value which should be processed before assigning it to the processed property</param>
+        /// <returns></returns>
+        private MapResult<object> GetValueFromAllMappings(Type entityType, DeltaPropInfo deltaPropInfo, object newPropertyValue)
         {
-            if (!DeltaCache.excludedProperties.ContainsKey(typeFullName)) return false;
-            if (DeltaCache.excludedProperties[typeFullName].Contains(propertyName)) return true;
-            return false;
+            var valueFromPropertyMappings = GetValueFromPropertyMappings(deltaPropInfo, newPropertyValue);
+            if (!valueFromPropertyMappings.Skip) return valueFromPropertyMappings;
+
+            return GetValueFromGlobalMappings(deltaPropInfo.PropertyInfo.PropertyType, newPropertyValue);
+        }
+
+        /// <summary>
+        /// Obtains the first <see cref="MapResult{T}"/> from global mapping functions which handles the specified <paramref name="propertyType"/> and <paramref name="newPropertyValue"/>.
+        /// </summary>
+        /// <param name="propertyType">Type of the property to be processed</param>
+        /// <param name="newPropertyValue">New value which should be processed before assigning it to the processed property</param>
+        /// <returns></returns>
+        private MapResult<object> GetValueFromGlobalMappings(Type propertyType, object newPropertyValue)
+        {
+            var mappings = DeltaConfig.GlobalMappings;
+
+            if (mappings != null)
+            {
+                foreach (var mapping in mappings)
+                {
+                    var mapResult = mapping(propertyType, newPropertyValue);
+
+                    if (mapResult.Skip) continue;
+
+                    return mapResult;
+                }
+            }
+
+            return new MapResult<object>() { Skip = true };
+        }
+
+        /// <summary>
+        /// Obtains the first <see cref="MapResult{T}"/> from the mapping functions linked to the specified property.
+        /// </summary>
+        /// <param name="entityType">Type of the entity</param>
+        /// <param name="propertyType">Type of the property</param>
+        /// <param name="propertyName">Name of the property</param>
+        /// <param name="newPropertyValue">New value which should be processed before assigning it to the processed property</param>
+        /// <returns></returns>
+        private MapResult<object> GetValueFromPropertyMappings(DeltaPropInfo deltaPropInfo, object newPropertyValue)
+        {
+            var mappings = deltaPropInfo.MapFunctions;
+
+            if (mappings != null)
+            {
+                foreach (var mapping in mappings)
+                {
+                    var mapResult = mapping(deltaPropInfo.PropertyInfo.PropertyType, newPropertyValue);
+
+                    if (mapResult.Skip) continue;
+
+                    return mapResult;
+                }
+            }
+
+            return new MapResult<object>().SkipMap();
         }
 
         #endregion

@@ -1,3 +1,10 @@
+3.0.0 - July 18, 2018
+* Break change: All entities types which is used in Delta<T> or DeltaCollection<T> must be declared in DeltaConfig.Init().
+* Break change: excluded property and 'ignore null value' option must be declared in DeltaConfig.Init().
+* Added global and properties mapping functions.
+* Added support to add property using expressions in Delta<T>.Add method.
+* Added unit tests.
+
 1.2.3 - Oct 13, 2017
 * Added ability to ignore null value for specified properties.
 

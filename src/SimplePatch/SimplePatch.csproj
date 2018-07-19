@@ -2,22 +2,26 @@
 
   <PropertyGroup>
     <TargetFrameworks>net451;netstandard1.4</TargetFrameworks>
-    <Version>1.2.4</Version>
+    <Version>3.0.0</Version>
     <Authors>Omar Muscatello</Authors>
     <Company>Omar Muscatello</Company>
     <Description>A simple library for partial entity changes in ASP.NET and ASP.NET Core.</Description>
-    <Copyright>Copyright (c) Omar Muscatello 2017</Copyright>
+    <Copyright>Copyright (c) Omar Muscatello 2018</Copyright>
     <PackageLicenseUrl>https://github.com/OmarMuscatello/SimplePatch/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>Fix exception when null assigned to a nullable value type.</PackageReleaseNotes>
+    <PackageReleaseNotes>* Break change: All entities types which is used in Delta&lt;T&gt; or DeltaCollection&lt;T&gt; must be declared in DeltaConfig.Init().
+* Break change: excluded property and 'ignore null value' option must be declared in DeltaConfig.Init().
+* Added global and properties mapping functions.
+* Added support to add property using expressions in Delta&lt;T&gt;.Add method.
+* Added unit tests.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/OmarMuscatello/SimplePatch</PackageProjectUrl>
     <RepositoryUrl>https://github.com/OmarMuscatello/SimplePatch</RepositoryUrl>
     <PackageIconUrl>http://raw.github.com/OmarMuscatello/SimplePatch/master/simplepatch-icon.png</PackageIconUrl>
     <RepositoryType></RepositoryType>
-    <PackageTags>web-api patch entity-framework update asp-net asp-net-core</PackageTags>
+    <PackageTags>patch http-patch partial-entity-changes web-api asp-net-web-api entity-framework entity-framework-core asp-net asp-net-core</PackageTags>
     <ApplicationIcon></ApplicationIcon>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.2.4.0</AssemblyVersion>
-    <FileVersion>1.2.4.0</FileVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
   </PropertyGroup>
 
 </Project>

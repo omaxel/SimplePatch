@@ -1,16 +1,34 @@
-<img src="http://raw.github.com/OmarMuscatello/SimplePatch/master/simplepatch.png" height="70" alt="SimplePatch">
+<img src="simplepatch.svg" height="50" alt="SimplePatch">
+<p></p>
 
+
+[![NuGet](https://img.shields.io/nuget/v/SimplePatch.svg)](https://www.nuget.org/packages/SimplePatch/) [![GitHub license](https://img.shields.io/github/license/OmarMuscatello/SimplePatch.svg)](LICENSE)
 
 A simple library for partial entity changes in ASP.NET and ASP.NET Core.
 
-**Help me!** Improve this translation with a pull request.
+[SimplePatch **v1.x** documentation](README-v1.x.md)
 
-##### Summary
+## Summary
+- [Quick Start](#quick-start)
 - [Introduction](#introduction)
 - [Install](#install)
 - [How to use](#how-to-use)
-- [Integration with the Entity Framework](#integration-with-entity-framework)
 - [Configuration](#configuration)
+   - [Globals](#globals)
+     - [Adding entities](#adding-entities)  
+     - [Ignore letter case for property names](#ignore-letter-case-for-property-names)
+     - [(Global) Mapping functions](#(global)-mapping-functions)
+   - [Properties Configuration](#properties-configuration)
+     - [Exclude properties](#exclude-properties)
+     - [Ignore null value](#ignore-null-value)
+     - [Mapping functions](#mapping-functions)
+
+## Quick Start
+```
+PM> Install-Package SimplePatch
+```
+Jump to [How to use](#how-to-use).
+
 
 ## Introduction
 
@@ -38,66 +56,75 @@ Returning to the example shown in the *[Problem](#the-problem)* section, the req
 ```   
 { "Enabled": true }
 ```
-If the entity has more property, the request body will remain the same.
+If the entity has more than one property, the request body will remain the same.
 
-*SimplePatch* allows you to implement this solution in the ASP.NET Web API.
+*SimplePatch* allows you to implement this solution in ASP.NET Web API and ASP.NET Core Web API.
 
 ## Install
 Launch the following command from *Package Manager Console*:
 ```
-Install-Package SimplePatch
+PM> Install-Package SimplePatch
 ```
 
 ## How to use
+See [*examples* folder](https://github.com/OmarMuscatello/SimplePatch/tree/master/examples) to learn how to use this library with ASP.NET and ASP.NET Core.
 
-See [*examples* folder](https://github.com/OmarMuscatello/SimplePatch/tree/master/examples) to learn of to use this library with ASP.NET and ASP.NET Core.
+##### Add target entity
+In your `Startup.cs` file or in the `Global.asax` file, add the entity/ies which you plan to use.
+```
+DeltaConfig.Init(cfg => {
+    cfg.AddEntity<Person>();
+});
+```
 
-##### Patching a single entity
-    [HttpPatch]
-    public IHttpActionResult PatchOne(int id, Delta<Person> person)
-    {
-        // Determines the entity to be updated according to the id parameter
-        var personToPatch = TestData.People.FirstOrDefault(x => x.Id == id);
-        if (personToPatch == null) return BadRequest("Person not found");
-
-        // Apply the changes specified to the original entity
-        person.Patch(personToPatch);
-
-        // Now the personToPatch variable is updated
-
-        return Ok(personToPatch);
-    }
-##### Patching multiple entities
-    [HttpPatch]
-    public IHttpActionResult PatchMultiple(DeltaCollection<Person> people)
-    {
-        foreach (var person in people)
-        {
-            // Try to get the value of the Id property
-            if (person.TryGetPropertyValue(nameof(Person.Id), out var id))
-            {
-                // Determines the entity to be updated according to the specified id
-                var personToPatch = TestData.People.FirstOrDefault(x => x.Id == Convert.ToInt32(id));
-                if (personToPatch == null) return BadRequest("Person not found (Id = " + id + ")");
-
-                // Apply the specified changes to the original entity       
-                person.Patch(personToPatch);
-            }
-            else
-            {
-                // The Id property was not specified for the person represented by the person variable 
-                return BadRequest("Id property not found for a person");
-            }
-        }
-
-        return Ok();
-    }
-
-## Integration with Entity Framework
 ##### Patching a single entity
 ```
+[HttpPatch("{id}")]
+public async Task<IActionResult> PatchOne(int id, Delta<Person> person)
+{
+    // Determines the entity to be updated according to the id parameter
+    var personToPatch = await TestData.People.FirstOrDefault(x => x.Id == deskid);
+    if (personToPatch == null) return BadRequest("Person not found");
+
+    // Apply the changes specified to the original entity
+    person.Patch(personToPatch);
+
+    // Now the personToPatch variable is updated
+
+    return Ok(personToPatch);
+}
+```
+##### Patching multiple entities
+```
 [HttpPatch]
-public async Task<IHttpActionResult> PatchOne(int id, Delta<PersonEF> person)
+public async Task<IActionResult> PatchMultiple(DeltaCollection<Person> people)
+{
+    foreach (var person in people)
+    {
+        // Try to get the value of the Id property
+        if (person.TryGetPropertyValue(nameof(Person.Id), out var id))
+        {
+            // Determines the entity to be updated according to the specified id
+            var personToPatch = TestData.People.FirstOrDefault(x => x.Id == Convert.ToInt32(id));
+            if (personToPatch == null) return BadRequest("Person not found (Id = " + id + ")");
+
+            // Apply the specified changes to the original entity       
+            person.Patch(personToPatch);
+        }
+        else
+        {
+            // The Id property was not specified for the person represented by the person variable 
+            return BadRequest("Id property not found for a person");
+        }
+    }
+
+    return Ok();
+}
+```
+##### Patching a single entity (Entity Framework)
+```
+[HttpPatch]
+public async Task<IActionResult> PatchOne(int id, Delta<PersonEF> person)
 {
     // Determines the entity to be updated according to the id parameter
     var personToPatch = await db.People.FindAsync(id);
@@ -106,10 +133,11 @@ public async Task<IHttpActionResult> PatchOne(int id, Delta<PersonEF> person)
     // Apply the specified changes to the original entity     
     person.Patch(personToPatch);
 
+    // Now the personToPatch variable is updated
+
+
     // Mark the entity as modified
     db.Entry(personToPatch).State = EntityState.Modified;
-
-    // Now the personToPatch variable is updated
 
     // Save the changes
     await db.SaveChangesAsync();
@@ -118,10 +146,10 @@ public async Task<IHttpActionResult> PatchOne(int id, Delta<PersonEF> person)
 }
 ```
 
-##### Patching multiple entities
+##### Patching multiple entities (Entity Framework)
 ```
 [HttpPatch]
-public async Task<IHttpActionResult> PatchMultiple(DeltaCollection<PersonEF> people)
+public async Task<IActionResult> PatchMultiple(DeltaCollection<PersonEF> people)
 {
     foreach (var person in people)
     {
@@ -153,8 +181,95 @@ public async Task<IHttpActionResult> PatchMultiple(DeltaCollection<PersonEF> peo
 ```
 
 ## Configuration
+All the configuration options can be specified through the `DeltaConfing.Init` function parameter. This function should be called at application startup, typically on the `Startup.cs` or `Global.asax` file.
 
-#### Exclude properties
+For example:
+```
+public Startup(IConfiguration configuration)
+{
+    DeltaConfig.Init(cfg => {
+        cfg.AddEntity<Person>()
+            .Property(x => x.Id).Exclude();
+    });
+}
+```
+
+### Globals
+#### - Adding entities
+To be able to use an entity you must add it using the `AddEntity<T>` method of the configuration object.
+```
+DeltaConfig.Init(cfg =>
+{
+    cfg.AddEntity<Person>();
+    cfg.AddEntity<Book>();
+});
+```
+
+#### - Ignore letter case for property names
+You can ignore letter case for property names. This is useful when you have different name conventions between client code and server code.
+
+For example, the `name` property sent by the client wouldn't be detected as part of an entity which has a property named `Name` (note the first letter is **upper case**).
+
+_Usage_
+```
+DeltaConfig.Init(cfg =>
+{
+    cfg.AddEntity<Person>();
+
+    cfg.IgnoreLetterCase(); // <==
+});
+```
+
+#### - (Global) Mapping functions
+Mapping functions allow you to manipulate a value before it is assigned to the property.
+
+You could use this feature to handle a specific type.
+
+For example, let's say you want to handle a specific date format (dd/mm/yyyy) for a property whose type is `Nullable<DateTime>`. You could use a global mapping function like this:
+```
+DeltaConfig.Init(cfg =>
+{
+    cfg.AddEntity<Person>();
+
+    cfg.AddMapping((propertyType, newValue) =>
+    {
+        var result = new MapResult<object>();
+
+        if (propertyType != typeof(DateTime?) || newValue.GetType() != typeof(string))
+        {
+            // No action executed
+            return result.SkipMap();
+        }
+
+        if (DateTime.TryParseExact((string)newValue, "dd/MM/yyyy", new CultureInfo("it-IT"), DateTimeStyles.None, out var date))
+        {
+            // Value which be assigned to the property
+            result.Value = date;
+        }
+        else
+        {
+            // Value can be null because the target property is of type Nullable<DateTime>
+            result.Value = null;
+        }
+
+        return result;
+    });
+});
+```
+
+You can add as many mapping function as you want. The result returned from the mapping function must be of type `MapResult<object>`.
+The latter has a property named `Value` which stores the value which will be assigned to the property.
+
+If the current mapping function shouldn't handle the property value, you can return the result of the `SkipMap()` method of the `MapResult<object>` instance.
+
+To better understand how global mapping functions works, please take a look a the diagram below.
+
+![Global Mapping Functions diagram](diagrams/global-mapping-functions.svg)
+
+> **Remember**  You can assign assign `null` to the `Value` property of the returned `MapResult<object>` instance only if the target property is nullable. 
+
+### Properties configuration
+#### - Exclude properties
 You can exclude one or more properties of an entity while applying the changes to the original entity to preserve the original value of the property. This might be useful for properties used to uniquely identify the entity.
 
 **Global.asax** or **Startup.cs**
@@ -162,26 +277,15 @@ You can exclude one or more properties of an entity while applying the changes t
 DeltaConfig.Init((cfg) =>
 {
     // Exclude the Id property of the Person entity.
-    cfg.ExcludeProperties<Person>(x => x.Id);
+    cfg.AddEntity<Person>().Property(x => x.Id).Exclude();
 });
 ```
 
-**Note:** When a property is marked as *excluded* it will still be present in the `Delta <T>` object, but it will be ignored when the changes are applied (`Patch` method) to the original entity.
+**Note:** When a property is marked as *excluded* it will still be present in the `Delta<T>` object, but it will be ignored when  changes are applied (`Patch` method) to the original entity.
 
-#### Ignore letter case for property names
-You can ignore letter case for property names. This is useful when you have different name convention between client code and server code.
-For example, the property `name` sent by the client wouldn't be detected as part of an entity which has a property named `Name` (note the first letter is **upper case**).
 
-**Global.asax** or **Startup.cs**
-```
-DeltaConfig.Init((cfg) =>
-{
-    cfg.IgnoreLetterCase();
-});
-```
-
-#### Ignore null value for specified properties
-You can ignore null value for specified properties of an entity.
+#### - Ignore null value
+You can ignore null value for the specified property of an entity.
 
 This is particularly useful in two cases:
 
@@ -192,9 +296,42 @@ This is particularly useful in two cases:
 ```
 DeltaConfig.Init(cfg =>
 {
-    cfg.IgnoreNullValue<MyClass>(x => x.Date);
-
-    // Multiple properties
-    // cfg.IgnoreNullValue<MyClass>(x => x.Date1, x => x.Date2);
+    cfg.AddEntity<Person>().Property(x => x.MyProperty).IgnoreNull();
 });
 ```
+
+#### - Mapping functions
+You can add property specific mapping functions to manipulate the input value before it is assigned to the specified property.
+They works like [global mapping functions](global-mapping-functions) but they're applyed only for the specified property.
+
+Let's say that the client send a two figures number as a string:
+```
+{
+    "MyNumber": "52"
+}
+```
+but, you want only the first figure of the number as a `int` (your property is of type `int`). You could use the following mapping function to handle the splitting and conversion:
+
+**Global.asax** or **Startup.cs**
+```
+DeltaConfig.Init(cfg =>
+{
+    cfg.AddEntity<Person>().Property(x => x.MyNumber).AddMapping((propType, newValue) =>
+    {
+        var result = new MapResult<int>();
+
+        // Ignore non string values
+        if (newValue.GetType() != typeof(string)) return result.SkipMap();
+
+        result.Value = Convert.ToInt32(newValue.ToString().Substring(0, 1));
+
+        return result;
+    });
+});
+```
+To better understand what `SkipMap()` mean, please take a look at the [Global Mapping Functions diagram](#mapping-functions).
+
+The result type of the specified function must be of the same type of the property for which the mapping function is added to.
+
+#### Mapping functions order
+In order to assign a value to a property, SimplePatch will evaluate the property mapping functions first. If there aren't property mapping functions or they return the result of `SkipMap()`, then the global mapping functions will be evaluated. If there aren't global mapping functions or they return the result of `SkipMap()`, then the default behavior will be used (SimplePatch will try to convert the input value type to the target property type).
