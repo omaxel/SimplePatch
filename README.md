@@ -15,13 +15,13 @@ A simple library for partial entity changes in ASP.NET and ASP.NET Core.
 - [How to use](#how-to-use)
 - [Configuration](#configuration)
    - [Globals](#globals)
-     - [Adding entities](#adding-entities)  
-     - [Ignore letter case for property names](#ignore-letter-case-for-property-names)
-     - [(Global) Mapping functions](#(global)-mapping-functions)
+     - [Adding entities](#--adding-entities)  
+     - [Ignore letter case for property names](#--ignore-letter-case-for-property-names)
+     - [(Global) Mapping functions](#--(global)-mapping-functions)
    - [Properties Configuration](#properties-configuration)
-     - [Exclude properties](#exclude-properties)
-     - [Ignore null value](#ignore-null-value)
-     - [Mapping functions](#mapping-functions)
+     - [Exclude properties](#--exclude-properties)
+     - [Ignore null value](#--ignore-null-value)
+     - [Mapping functions](#--mapping-functions)
 
 ## Quick Start
 ```
