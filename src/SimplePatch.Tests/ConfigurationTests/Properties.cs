@@ -27,7 +27,7 @@ namespace SimplePatch.Tests.ConfigurationTests
 
             var initialAge = John.Age;
 
-            GetDelta(x => x.Age, 23).Patch(John);
+            CreateDelta<Person, int>(x => x.Age, 23).Patch(John);
 
             Assert.AreEqual(initialAge, John.Age);
         }
@@ -44,7 +44,7 @@ namespace SimplePatch.Tests.ConfigurationTests
 
             var initialName = John.Name;
 
-            GetDelta<string, string>(x => x.Name, null).Patch(John);
+            CreateDelta<Person, string>(x => x.Name, null).Patch(John);
 
             Assert.AreEqual(initialName, John.Name);
         }
@@ -108,19 +108,19 @@ namespace SimplePatch.Tests.ConfigurationTests
             });
 
             // Global mapping function executed here
-            GetDelta(x => x.Surname, "Rossi").Patch(John);
+            CreateDelta<Person, string>(x => x.Surname, "Rossi").Patch(John);
             Assert.AreEqual("issoR", John.Surname);
 
             // First property mapping function executed here
-            GetDelta(x => x.Name, "Mario").Patch(John);
+            CreateDelta<Person, string>(x => x.Name, "Mario").Patch(John);
             Assert.AreEqual("Mario", John.Name);
 
             // Second property mapping function executed here
-            GetDelta(x => x.Name, 15).Patch(John);
+            CreateDelta<Person, string>(x => x.Name, 15).Patch(John);
             Assert.AreEqual("number:15", John.Name);
 
             // Third property mapping function executed here
-            GetDelta(x => x.Name, John.BirthDate).Patch(John);
+            CreateDelta<Person, string>(x => x.Name, John.BirthDate).Patch(John);
             Assert.AreEqual("datetime:1990-02-01T20:15:10", John.Name);
         }
     }

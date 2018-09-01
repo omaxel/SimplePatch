@@ -23,7 +23,7 @@ namespace SimplePatch.Tests.ConfigurationTests
                 .AddEntity<Person>();
             });
 
-            GetDelta("AgE", 23).Patch(John);
+            CreateDelta<Person>("AgE", 23).Patch(John);
             Assert.AreEqual(23, John.Age);
         }
 
@@ -66,11 +66,11 @@ namespace SimplePatch.Tests.ConfigurationTests
             });
 
             // First mapping function will be executed here, Age type is int
-            GetDelta(x => x.Age, "abc").Patch(John);
+            CreateDelta<Person, int>(x => x.Age, "abc").Patch(John);
             Assert.AreEqual("abc".Length, John.Age);
 
             // Second mapping function will be executed here, Height type is double
-            GetDelta(x => x.Height, "abcdef").Patch(John);
+            CreateDelta<Person, double>(x => x.Height, "abcdef").Patch(John);
             Assert.AreEqual("abcdef".Length + 0.5, John.Height);
         }
     }

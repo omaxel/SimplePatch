@@ -1,3 +1,6 @@
+3.0.1 - Sep 01, 2018
+* Added support for child class patch.
+
 3.0.0 - July 18, 2018
 * Break change: All entities types which is used in Delta<T> or DeltaCollection<T> must be declared in DeltaConfig.Init().
 * Break change: excluded property and 'ignore null value' option must be declared in DeltaConfig.Init().

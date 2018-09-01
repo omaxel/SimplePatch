@@ -5,19 +5,20 @@ namespace SimplePatch.Tests
 {
     internal class DeltaUtils
     {
-        internal static Delta<Person> GetDelta<TProp, T>(Expression<Func<Person, TProp>> property, T propValue)
+        internal static Delta<TEntity> CreateDelta<TEntity, TProp>(Expression<Func<TEntity, TProp>> property, object propValue)
+            where TEntity : class, new()
         {
-            var delta = new Delta<Person>();
+            var delta = new Delta<TEntity>();
             delta.Add(property, propValue);
             return delta;
         }
 
-        internal static Delta<Person> GetDelta<T>(string propertyName, T propValue)
+        internal static Delta<TEntity> CreateDelta<TEntity>(string property, object propValue)
+          where TEntity : class, new()
         {
-            var delta = new Delta<Person>();
-            delta.Add(propertyName, propValue);
+            var delta = new Delta<TEntity>();
+            delta.Add(property, propValue);
             return delta;
         }
-
     }
 }

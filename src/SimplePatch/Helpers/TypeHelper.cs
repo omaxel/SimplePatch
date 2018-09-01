@@ -14,7 +14,7 @@ namespace SimplePatch.Helpers
         /// <returns>List of properties belonging to the specified identity as <see cref="IEnumerable{DeltaInfo}"/></returns>
         internal static IEnumerable<DeltaPropInfo> GetEntityProperties<TEntity>()
         {
-            return typeof(TEntity).GetTypeInfo().DeclaredProperties.Where(x => x.GetMethod.IsPublic && x.SetMethod.IsPublic && x.CanRead && x.CanWrite).Select(x => new DeltaPropInfo(x));
+            return typeof(TEntity).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.GetMethod != null && x.GetMethod.IsPublic && x.SetMethod != null && x.SetMethod.IsPublic && x.CanRead && x.CanWrite).Select(x => new DeltaPropInfo(x));
         }
 
 

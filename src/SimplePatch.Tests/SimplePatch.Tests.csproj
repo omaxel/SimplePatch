@@ -48,6 +48,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClassInheritTests.cs" />
     <Compile Include="ConfigurationTests\Properties.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="ConfigurationTests\Globals.cs" />
@@ -58,13 +59,13 @@
     <Compile Include="TestCategories.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\SimplePatch\SimplePatch.csproj">
       <Project>{71d49858-8706-4e19-ab53-022320b263cd}</Project>
       <Name>SimplePatch</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

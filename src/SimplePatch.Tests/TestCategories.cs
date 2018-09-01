@@ -4,5 +4,6 @@
     {
         public const string PropertiesTypes = "Properties Types";
         public const string Configuration = "Configuration";
+        public const string ClassInheritance = "Class Inheritance";
     }
 }
