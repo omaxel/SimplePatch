@@ -70,7 +70,7 @@ namespace SimplePatch.Tests
         [TestMethod]
         public void DoublePropFromString()
         {
-            CreateDelta<Person, double>(x => x.Height, "28,5").Patch(John);
+            CreateDelta<Person, double>(x => x.Height, (28.5).ToString()).Patch(John);
             Assert.AreEqual(28.5, John.Height);
         }
 
