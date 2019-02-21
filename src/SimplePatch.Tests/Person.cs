@@ -10,5 +10,17 @@ namespace SimplePatch.Tests
         public double Height { get; set; }
         public Guid Guid { get; set; }
         public DateTime BirthDate { get; set; }
+        public Gender Gender { get; set; }
+        public Cool? Coolness { get; set; }
+    }
+
+    internal enum Gender
+    {
+        Unknown, Male, Female
+    }
+
+    internal enum Cool
+    {
+        Awesome, NotReally
     }
 }

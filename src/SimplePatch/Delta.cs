@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace SimplePatch
 {
@@ -239,6 +240,12 @@ namespace SimplePatch
                         if (truePropertyType == typeof(Guid) && newPropertyValueType == typeof(string))
                         {
                             newPropertyValue = new Guid((string)newPropertyValue);
+                            propertyInfo.SetValue(entity, newPropertyValue);
+                        }
+                        // Enum from string
+                        else if (truePropertyType.GetTypeInfo().IsEnum && newPropertyValueType == typeof(string))
+                        {
+                            newPropertyValue = Enum.Parse(truePropertyType, (string)newPropertyValue);
                             propertyInfo.SetValue(entity, newPropertyValue);
                         }
                         else
