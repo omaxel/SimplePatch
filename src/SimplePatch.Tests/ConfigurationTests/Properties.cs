@@ -33,6 +33,22 @@ namespace SimplePatch.Tests.ConfigurationTests
         }
 
         [TestMethod]
+        public void ExcludedByAttribute()
+        {
+            DeltaConfig.Init(cfg =>
+            {
+                cfg
+                .AddEntity<Person>();
+            });
+
+            var initialAge = John.Age;
+
+            CreateDelta<Person, int>(x => x.Age, 23).Patch(John);
+
+            Assert.AreEqual(initialAge, John.Age);
+        }
+
+        [TestMethod]
         public void IgnoreNullValue()
         {
             DeltaConfig.Init(cfg =>

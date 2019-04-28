@@ -1,4 +1,5 @@
 ﻿using System;
+using SimplePatch.Attributes;
 
 namespace SimplePatch.Tests
 {
@@ -6,6 +7,7 @@ namespace SimplePatch.Tests
     {
         public string Name { get; set; }
         public string Surname { get; set; }
+        [Exclude]
         public int Age { get; set; }
         public double Height { get; set; }
         public Guid Guid { get; set; }
