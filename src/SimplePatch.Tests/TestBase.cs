@@ -16,6 +16,7 @@ namespace SimplePatch.Tests
                 Name = "John",
                 Surname = "Doe",
                 Age = 22,
+                AgeExcludeByAttibute = 22,
                 Height = 1.7,
                 BirthDate = new DateTime(1990, 2, 1, 20, 15, 10)
             };
