@@ -240,18 +240,25 @@ namespace SimplePatch
                         if (truePropertyType == typeof(Guid) && newPropertyValueType == typeof(string))
                         {
                             newPropertyValue = new Guid((string)newPropertyValue);
-                            propertyInfo.SetValue(entity, newPropertyValue);
                         }
                         // Enum from string
-                        else if (truePropertyType.GetTypeInfo().IsEnum && newPropertyValueType == typeof(string))
+                        else if (truePropertyType.GetTypeInfo().IsEnum)
                         {
-                            newPropertyValue = Enum.Parse(truePropertyType, (string)newPropertyValue);
-                            propertyInfo.SetValue(entity, newPropertyValue);
+                            if (newPropertyValueType == typeof(string))
+                            {
+                                newPropertyValue = Enum.Parse(truePropertyType, (string) newPropertyValue);
+                            }
+                            else if (TypeHelper.IsEnumNumericType(newPropertyValueType))
+                            {
+                                newPropertyValue = Enum.ToObject(truePropertyType, newPropertyValue);
+                            }
                         }
                         else
                         {
-                            propertyInfo.SetValue(entity, Convert.ChangeType(newPropertyValue, truePropertyType));
+                            newPropertyValue = Convert.ChangeType(newPropertyValue, truePropertyType);
                         }
+
+                        propertyInfo.SetValue(entity, newPropertyValue);
                     }
                 }
             }
