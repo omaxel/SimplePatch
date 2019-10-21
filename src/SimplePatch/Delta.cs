@@ -229,10 +229,19 @@ namespace SimplePatch
 
                     if (!valueFromMappings.Skip)
                     {
-                        propertyInfo.SetValue(entity, valueFromMappings.Value);
+	                    var value = valueFromMappings.Value;
+	                    var valueType = value.GetType();
+	                    if (valueType.GenericTypeArguments.Any() && valueType.GetGenericTypeDefinition() == typeof(Delta<>))
+	                    {
+		                    valueType.GetMethod(nameof(Patch)).Invoke(value, new[] { propertyInfo.GetValue(entity, null) });
+						}
+	                    else
+	                    {
+		                    propertyInfo.SetValue(entity, valueFromMappings.Value);
+	                    }
                     }
-                    // If no mapping function assigned a value to the property, use the default mapping
-                    else
+					// If no mapping function assigned a value to the property, use the default mapping
+					else
                     {
                         var newPropertyValueType = newPropertyValue.GetType();
 
