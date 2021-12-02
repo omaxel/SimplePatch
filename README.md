@@ -302,7 +302,7 @@ DeltaConfig.Init(cfg =>
 
 #### - Mapping functions
 You can add property specific mapping functions to manipulate the input value before it is assigned to the specified property.
-They works like [global mapping functions](global-mapping-functions) but they're applyed only for the specified property.
+They works like [global mapping functions](%28global%29-mapping-functions) but they're applyed only for the specified property.
 
 Let's say that the client send a two figures number as a string:
 ```
