@@ -1,4 +1,5 @@
-﻿using SimplePatch.Helpers;
+﻿using SimplePatch.Attributes;
+using SimplePatch.Helpers;
 using SimplePatch.Mapping;
 using System;
 using System.Collections;
@@ -194,7 +195,7 @@ namespace SimplePatch
             foreach (var prop in entityProperties)
             {
                 var propertyInfo = prop.PropertyInfo;
-                if (ContainsKey(propertyInfo.Name) && !prop.Excluded)
+                if (ContainsKey(propertyInfo.Name) && !prop.Excluded && !ExcludedByAttribute(propertyInfo))
                 {
                     var truePropertyType = TypeHelper.GetTrueType(propertyInfo.PropertyType);
                     var newPropertyValue = this[propertyInfo.Name];
@@ -339,6 +340,10 @@ namespace SimplePatch
         public bool ContainsKey(string key)
         {
             return dict.ContainsKey(key);
+        }
+        public bool ExcludedByAttribute(PropertyInfo propertyInfo)
+        {
+            return propertyInfo.GetCustomAttribute(typeof(ExcludeAttribute)) != null;
         }
 
         public bool Remove(string key)

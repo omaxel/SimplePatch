@@ -28,6 +28,19 @@ namespace SimplePatch.Tests.ConfigurationTests
         }
 
         [TestMethod]
+        public void ConfigFromAssembly()
+        {
+
+            var assembly = typeof(Person).Assembly;
+            DeltaConfig.InitFromAssembly(cfg => {
+                cfg.AddAssembly(assembly);
+            });
+            CreateDelta<Person>("Age", 23).Patch(John);
+            Assert.AreEqual(23, John.Age);
+
+        }
+
+        [TestMethod]
         public void MappingFunction()
         {
             DeltaConfig.Init(cfg =>

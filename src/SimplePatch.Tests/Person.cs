@@ -1,4 +1,5 @@
 ﻿using System;
+using SimplePatch.Attributes;
 
 namespace SimplePatch.Tests
 {
@@ -7,6 +8,9 @@ namespace SimplePatch.Tests
         public string Name { get; set; }
         public string Surname { get; set; }
         public int Age { get; set; }
+        [Exclude]
+        public int AgeExcludeByAttibute { get; set; }
+        public int AgeExcludeByMapping { get; set; }
         public double Height { get; set; }
         public Guid Guid { get; set; }
         public DateTime BirthDate { get; set; }
@@ -23,4 +27,13 @@ namespace SimplePatch.Tests
     {
         Awesome, NotReally
     }
+
+    internal class PersonConfiguration : Mapping.IEntityTypeConfiguration<Person>
+    {
+        public void Configuration(DeltaConfig.EntityConfig<Person> entityConfig)
+        {
+            entityConfig.Property(x => x.AgeExcludeByMapping).Exclude();
+        }
+    }
+
 }

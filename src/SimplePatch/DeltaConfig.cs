@@ -2,7 +2,9 @@
 using SimplePatch.Mapping;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace SimplePatch
 {
@@ -20,6 +22,10 @@ namespace SimplePatch
             config(new Config());
         }
 
+        public static void InitFromAssembly(Action<ConfigFromAssembly> config) {
+            config(new ConfigFromAssembly());
+        }
+
         internal static void Clean()
         {
             IgnoreLetterCase = false;
@@ -27,62 +33,63 @@ namespace SimplePatch
             DeltaCache.Clear();
         }
 
+        public sealed class EntityConfig<T> where T : class, new()
+        {
+            public PropertyConfig<T, TProp> Property<TProp>(Expression<Func<T, TProp>> property)
+            {
+                return new PropertyConfig<T, TProp>(property);
+            }
+        }
+
+        public sealed class PropertyConfig<TEntity, TProp> where TEntity : class, new()
+        {
+            private readonly string propertyName;
+            private readonly DeltaCache.PropertyEditor<TEntity, TProp> deltaCachePropertyEditor;
+
+            public PropertyConfig(Expression<Func<TEntity, TProp>> property)
+            {
+                propertyName = ExpressionHelper.GetPropertyName(property);
+                deltaCachePropertyEditor = new DeltaCache.PropertyEditor<TEntity, TProp>(propertyName);
+            }
+
+            /// <summary>
+            /// Adds a mapping function for the specified property of the specified entity.
+            /// </summary>
+            /// <typeparam name="TProp">Type of the property</typeparam>
+            /// <param name="property">Expression which indicates the property</param>
+            /// <param name="mapFunction">Mapping function used to evaluate the value to be assigned to the property</param>
+            /// <returns></returns>
+            public PropertyConfig<TEntity, TProp> AddMapping(MapDelegate<TProp> mapFunction)
+            {
+                deltaCachePropertyEditor.AddMapping(mapFunction);
+                return this;
+            }
+
+            /// <summary>
+            /// Ignore null value for the specified property
+            /// </summary>
+            /// <returns></returns>
+            public PropertyConfig<TEntity, TProp> IgnoreNull()
+            {
+                deltaCachePropertyEditor.IgnoreNullValue();
+                return this;
+            }
+
+            /// <summary>
+            /// Marks the specified property as excluded when calling <see cref="Delta{TEntity}.Patch(TEntity)"/>.
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="properties"></param>
+            /// <returns></returns>
+            public PropertyConfig<TEntity, TProp> Exclude()
+            {
+                deltaCachePropertyEditor.Exclude();
+                return this;
+            }
+        }
+
         public sealed class Config
         {
-            public sealed class EntityConfig<T> where T : class, new()
-            {
-                public PropertyConfig<T, TProp> Property<TProp>(Expression<Func<T, TProp>> property)
-                {
-                    return new PropertyConfig<T, TProp>(property);
-                }
-            }
-
-            public sealed class PropertyConfig<TEntity, TProp> where TEntity : class, new()
-            {
-                private readonly string propertyName;
-                private readonly DeltaCache.PropertyEditor<TEntity, TProp> deltaCachePropertyEditor;
-
-                public PropertyConfig(Expression<Func<TEntity, TProp>> property)
-                {
-                    propertyName = ExpressionHelper.GetPropertyName(property);
-                    deltaCachePropertyEditor = new DeltaCache.PropertyEditor<TEntity, TProp>(propertyName);
-                }
-
-                /// <summary>
-                /// Adds a mapping function for the specified property of the specified entity.
-                /// </summary>
-                /// <typeparam name="TProp">Type of the property</typeparam>
-                /// <param name="property">Expression which indicates the property</param>
-                /// <param name="mapFunction">Mapping function used to evaluate the value to be assigned to the property</param>
-                /// <returns></returns>
-                public PropertyConfig<TEntity, TProp> AddMapping(MapDelegate<TProp> mapFunction)
-                {
-                    deltaCachePropertyEditor.AddMapping(mapFunction);
-                    return this;
-                }
-
-                /// <summary>
-                /// Ignore null value for the specified property
-                /// </summary>
-                /// <returns></returns>
-                public PropertyConfig<TEntity, TProp> IgnoreNull()
-                {
-                    deltaCachePropertyEditor.IgnoreNullValue();
-                    return this;
-                }
-
-                /// <summary>
-                /// Marks the specified property as excluded when calling <see cref="Delta{TEntity}.Patch(TEntity)"/>.
-                /// </summary>
-                /// <typeparam name="T"></typeparam>
-                /// <param name="properties"></param>
-                /// <returns></returns>
-                public PropertyConfig<TEntity, TProp> Exclude()
-                {
-                    deltaCachePropertyEditor.Exclude();
-                    return this;
-                }
-            }
 
             /// <summary>
             /// Allows to add settings for the specified property
@@ -119,5 +126,37 @@ namespace SimplePatch
                 return this;
             }
         }
+
+        public sealed class ConfigFromAssembly
+        {
+            private Config config;
+            public ConfigFromAssembly() {
+                this.config = new Config();
+            }
+            public ConfigFromAssembly AddAssembly(Assembly assembly) {
+
+                var types = assembly.GetTypes();
+                foreach (var type in types)
+                {
+                    var interfaces = type.GetInterfaces();
+                    var implementedInterface = interfaces.Where(x => x.IsConstructedGenericType &&  x.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)).FirstOrDefault();
+                    if (implementedInterface != null) {
+                        //add entity
+                        var methodDef = typeof(Config).GetMethod("AddEntity");
+                        var method = methodDef.MakeGenericMethod(new Type[] { implementedInterface.GetGenericArguments()[0] });
+                        var entityConfig = method.Invoke(config, new object[] { });
+                        //run config from entity
+                        var obj = Activator.CreateInstance(type);
+                        var configurationMethodDef = type.GetMethod("Configuration");
+                        configurationMethodDef.Invoke(obj, new object[] { entityConfig });
+
+                    }
+                }
+                return this;
+            }
+        }
+
+        
+
     }
 }
