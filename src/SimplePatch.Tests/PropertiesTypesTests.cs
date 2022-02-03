@@ -71,8 +71,7 @@ namespace SimplePatch.Tests
             CreateDelta<Person, Cool?>(x => x.Coolness, null).Patch(John);
             Assert.IsNull(John.Coolness);
         }
-
-
+        
         #region From string
 
         [TestMethod]
@@ -119,6 +118,26 @@ namespace SimplePatch.Tests
             John.Coolness = Cool.Awesome;
             CreateDelta<Person, Cool?>(x => x.Coolness, null).Patch(John);
             Assert.IsNull(John.Coolness);
+        }
+
+        #endregion
+
+        #region From numeric
+
+        [TestMethod]
+        public void EnumPropFromInt()
+        {
+            var gender = Gender.Male;
+            CreateDelta<Person, Gender>(x => x.Gender, (int)gender).Patch(John);
+            Assert.AreEqual(gender, John.Gender);
+        }
+
+        [TestMethod]
+        public void EnumPropFromLong()
+        {
+            var gender = Gender.Male;
+            CreateDelta<Person, Gender>(x => x.Gender, (long)gender).Patch(John);
+            Assert.AreEqual(gender, John.Gender);
         }
 
         #endregion
